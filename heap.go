@@ -15,7 +15,7 @@ type heap[T any] struct {
 type funcCmp[T any] func(T, T) int
 
 func CrearHeap[T any](funcion_cmp func(T, T) int) ColaPrioridad[T] {
-	return &heap{
+	return &heap[T]{
 		datos: make([]T, TAM_INICIAL),
 		cantidad: 0,
 		cmp: funcion_cmp,
@@ -23,8 +23,8 @@ func CrearHeap[T any](funcion_cmp func(T, T) int) ColaPrioridad[T] {
 }
 
 func CrearHeapArr[T any](arreglo []T, funcion_cmp func(T, T) int) ColaPrioridad[T] {
-	return &heap{
-		datos: heapify(arreglo),
+	return &heap[T]{
+		datos: heapify(arreglo, funcion_cmp),
 		cantidad: len(arreglo),
 		cmp: funcion_cmp,
 	}
@@ -41,7 +41,8 @@ func (heap *heap[T]) Encolar(dato T) {
 	}
 	heap.datos[heap.cantidad] = dato
 	heap.cantidad++
-	heap.upHeap(cantidad-1)
+	upHeap(heap.datos,heap.cantidad-1,heap.cmp)
+	
 }
 
 func (heap *heap[T]) VerMax() T {
@@ -61,7 +62,7 @@ func (heap *heap[T]) Desencolar() T {
 	heap.datos[0], heap.datos[heap.cantidad-1] = heap.datos[heap.cantidad-1], heap.datos[0]
 	desencolado := heap.datos[heap.cantidad-1]
 	heap.cantidad--
-	heap.downHeap(heap.datos[0])
+	downHeap(heap.datos, 0, heap.cantidad, heap.cmp)
 	return desencolado
 }
 
@@ -72,11 +73,10 @@ func (heap *heap[T]) Cantidad() int {
 //UPHEAP Y DOWNHEAP
 func  upHeap[T any](datos []T, pos int, cmp func(T, T) int) {
 	pos_padre := buscarPadre(pos)
-	if cmp(datos[pos_padre], datos[pos]) > 0 {
-		return 
+	if cmp(datos[pos_padre], datos[pos]) < 0 {
+		datos[pos_padre], datos[pos] = datos[pos], datos[pos_padre]
+		upHeap(datos,pos_padre,cmp)
 	}
-	datos[pos_padre], datos[pos] = datos[pos], datos[pos_padre]
-	upHeap(datos,pos_padre,cmp)
 }
 
 func buscarPadre(pos int) int {
@@ -84,24 +84,27 @@ func buscarPadre(pos int) int {
 	return pos_padre
 }
 
-func downHeap[T any](datos []T, pos int, cmp func(T, T) int) {
+func downHeap[T any](datos []T, pos int, cantidad int, cmp func(T, T) int) {
 	pos_hijo_izq := buscarHijoIzq(pos)
 	pos_hijo_der := buscarHijoDer(pos)
-	if pos_hijo_izq > (heap.cantidad - 1) && pos_hijo_der > (heap.cantidad - 1) {
+	if pos_hijo_izq >= cantidad {
 		return
-	} else if pos_hijo_der > (heap.cantidad - 1) {
-		if cmp(heap.datos[pos_hijo_izq], datos[pos]) < 0 {
-			return
-		} else {
+	}
+	if pos_hijo_der >= cantidad {
+		if cmp(datos[pos_hijo_izq], datos[pos]) > 0 {
 			datos[pos_hijo_izq], datos[pos] = datos[pos], datos[pos_hijo_izq]
 		}
+		return
+	}
+	if cmp(datos[pos_hijo_izq], datos[pos_hijo_der]) > 0 || cmp(datos[pos_hijo_izq], datos[pos_hijo_der]) == 0 {
+		if cmp(datos[pos_hijo_izq], datos[pos]) > 0 {
+			datos[pos_hijo_izq], datos[pos] = datos[pos], datos[pos_hijo_izq]
+			downHeap(datos, pos_hijo_izq, cantidad, cmp)
+		}
 	} else {
-		if cmp(datos[pos_hijo_izq], datos[pos_hijo_der]) >= 0 {
-			datos[pos_hijo_izq],heap.datos[pos] = datos[pos], datos[pos_hijo_izq]
-			downHeap(datos,pos_hijo_izq,cmp)
-		} else {
-			datos[pos_hijo_der],datos[pos] = datos[pos], datos[pos_hijo_der]
-			downHeap(datos,pos_hijo_der,cmp)
+		if cmp(datos[pos_hijo_der], datos[pos]) > 0 {
+			datos[pos_hijo_der], datos[pos] = datos[pos], datos[pos_hijo_der]
+			downHeap(datos, pos_hijo_der, cantidad, cmp)
 		}
 	}
 }
@@ -119,7 +122,15 @@ func buscarHijoDer(pos int) int {
 //HEAPIFY
 func heapify[T any](arr []T, cmp func(T, T) int) []T {
 	for i := len(arr)- 1; i >= 0; i-- {
-		downHeap(arr,i,cmp)
+		downHeap(arr,i,len(arr), cmp)
 	}
+	return arr
+}
+
+//REDIMENSION
+func (heap *heap[T]) redimensionar(nuevo_tam int) {
+	nuevos_datos := make([]T, nuevo_tam)
+	copy(nuevos_datos, heap.datos)
+	heap.datos = nuevos_datos
 }
 
