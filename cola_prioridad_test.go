@@ -125,8 +125,8 @@ func TestCrearHeapArreglo(t *testing.T) {
 	require.EqualValues(t, "E", heap.VerMax())
 }
 
-func TestHeapSort(t *testing.T) {
-	t.Log("Probamos que a partir de un heap ultizando la herramienta heapsort")
+func TestHeapSortString(t *testing.T) {
+	t.Log("Probamos la herramienta de heapsort en un arreglo de strings")
 	arr_ordenado := []string{"A", "B", "C", "E", "J"}
 	arr_desordenado := []string{"B", "C", "J", "E", "A"}
 
@@ -135,5 +135,27 @@ func TestHeapSort(t *testing.T) {
 	for i, letra := range arr_ordenado {
 		require.EqualValues(t, letra, arr_desordenado[i])
 	}
+
+}
+
+func TestHeapSortInt(t *testing.T) {
+	t.Log("Probamos la herramienta de heapsort en un arreglo de enteros")
+	arr_ordenado := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	arr_desordenado := []int{1, 3, 5, 7, 9, 2, 4, 6, 8, 10}
+
+	cola_prioridad.HeapSort[int](arr_desordenado, compararNumerosEnteros)
+
+	for i, letra := range arr_ordenado {
+		require.EqualValues(t, letra, arr_desordenado[i])
+	}
+
+}
+
+func TestHeapSortArregloVacio(t *testing.T) {
+	t.Log("Probamos la herramienta de heapsort en un arreglo de enteros")
+	arr_ordenado := []string{""}
+	arr_desordenado := []string{""}
+	cola_prioridad.HeapSort[string](arr_desordenado, compararStrings)
+	require.EqualValues(t, arr_ordenado[0], arr_desordenado[0])
 
 }

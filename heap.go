@@ -136,10 +136,12 @@ func (heap *heap[T]) redimensionar(nuevo_tam int) {
 
 // heap sort
 func HeapSort[T any](lista []T, cmp func(T, T) int) {
-	//creo heaparr y lo doy vuelta
+	//finaliza en O(n log n)
 	nuevo_heap := CrearHeapArr[T](lista, cmp)
 	cantidad := nuevo_heap.Cantidad() - 1
+
 	for !nuevo_heap.EstaVacia() {
+		//O(log n)
 		lista[cantidad] = nuevo_heap.Desencolar()
 		cantidad--
 	}
