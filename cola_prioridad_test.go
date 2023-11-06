@@ -2,22 +2,24 @@ package cola_prioridad_test
 
 import (
 	TDAHeap "tdas/heap"
+	cola_prioridad "tdas/heap"
 	"testing"
+
 	"github.com/stretchr/testify/require"
 )
 
-//CONSTANTES
-var(
+// CONSTANTES
+var (
 	NUMEROS  = []int{5, 4, 3, 2, 1}
 	PALABRAS = []string{"B", "C", "J", "E", "A"}
 )
 
-const(
-	MSG_PANIC = "La cola esta vacia"
+const (
+	MSG_PANIC      = "La cola esta vacia"
 	TAMANO_VOLUMEN = 1000
 )
 
-//Comparación de strings
+// Comparación de strings
 func compararStrings(a, b string) int {
 	if a == b {
 		return 0
@@ -28,12 +30,12 @@ func compararStrings(a, b string) int {
 	return 1
 }
 
-//Comparación de números
+// Comparación de números
 func compararNumerosEnteros(a, b int) int {
 	return a - b
 }
 
-//TESTS
+// TESTS
 func TestHeapVacio(t *testing.T) {
 	t.Log("Vemos el comportamiento de una pila recien creada")
 	heap := TDAHeap.CrearHeap[string](compararStrings)
@@ -49,7 +51,7 @@ func TestEncolarElementos(t *testing.T) {
 		heap.Encolar(numero)
 	}
 	require.EqualValues(t, 5, heap.VerMax())
-	
+
 	for _, numero := range NUMEROS {
 		require.EqualValues(t, numero, heap.VerMax())
 		valorDesencolado := heap.Desencolar()
@@ -58,7 +60,7 @@ func TestEncolarElementos(t *testing.T) {
 	require.True(t, heap.EstaVacia())
 	require.PanicsWithValue(t, MSG_PANIC, func() { heap.VerMax() })
 	require.PanicsWithValue(t, MSG_PANIC, func() { heap.Desencolar() })
-	
+
 }
 
 func TestDeVolumen(t *testing.T) {
@@ -123,3 +125,15 @@ func TestCrearHeapArreglo(t *testing.T) {
 	require.EqualValues(t, "E", heap.VerMax())
 }
 
+func TestHeapSort(t *testing.T) {
+	t.Log("Probamos que a partir de un heap ultizando la herramienta heapsort")
+	arr_ordenado := []string{"A", "B", "C", "E", "J"}
+	arr_desordenado := []string{"B", "C", "J", "E", "A"}
+
+	cola_prioridad.HeapSort[string](arr_desordenado, compararStrings)
+
+	for i, letra := range arr_ordenado {
+		require.EqualValues(t, letra, arr_desordenado[i])
+	}
+
+}
