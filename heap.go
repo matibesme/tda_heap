@@ -23,10 +23,17 @@ func CrearHeap[T any](funcion_cmp func(T, T) int) ColaPrioridad[T] {
 }
 
 func CrearHeapArr[T any](arreglo []T, funcion_cmp func(T, T) int) ColaPrioridad[T] {
-	return &heap[T]{
-		datos:    heapify(arreglo, funcion_cmp),
-		cantidad: len(arreglo),
-		cmp:      funcion_cmp,
+	if len(arreglo) == 0 {
+		return CrearHeap[T](funcion_cmp)
+	} else {
+		copiaArreglo := make([]T, len(arreglo))
+		copy(copiaArreglo, arreglo)
+		heap := new(heap[T])
+		heap.cantidad = len(copiaArreglo)
+		heap.cmp = funcion_cmp
+		heapify[T](copiaArreglo, funcion_cmp)
+		heap.datos = copiaArreglo
+		return heap
 	}
 }
 
@@ -119,14 +126,6 @@ func buscarHijoDer(pos int) int {
 	return pos_hijo_der
 }
 
-// HEAPIFY
-func heapify[T any](arr []T, cmp func(T, T) int) []T {
-	for i := len(arr) - 1; i >= 0; i-- {
-		downHeap(arr, i, len(arr), cmp)
-	}
-	return arr
-}
-
 // REDIMENSION
 func (heap *heap[T]) redimensionar(nuevo_tam int) {
 	nuevos_datos := make([]T, nuevo_tam)
@@ -134,16 +133,18 @@ func (heap *heap[T]) redimensionar(nuevo_tam int) {
 	heap.datos = nuevos_datos
 }
 
-// heap sort
-func HeapSort[T any](lista []T, cmp func(T, T) int) {
-	//finaliza en O(n log n)
-	nuevo_heap := CrearHeapArr[T](lista, cmp)
-	cantidad := nuevo_heap.Cantidad() - 1
-
-	for !nuevo_heap.EstaVacia() {
-		//O(log n)
-		lista[cantidad] = nuevo_heap.Desencolar()
-		cantidad--
+// HEAPIFY
+func heapify[T any](arreglo []T, cmp func(T, T) int) {
+	for pos := len(arreglo) - 1; pos >= 0; pos-- {
+		downHeap[T](arreglo, pos, len(arreglo), cmp)
 	}
+}
 
+// HEAPSORT
+func HeapSort[T any](lista []T, cmp func(T, T) int) {
+	heapify[T](lista, cmp)
+	for i := len(lista) - 1; i > 0; i-- {
+		lista[0], lista[i] = lista[i], lista[0]
+		downHeap(lista, 0, i, cmp)
+	}
 }
