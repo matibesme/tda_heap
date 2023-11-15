@@ -1,9 +1,10 @@
 package cola_prioridad
 
 const (
-	TAM_INICIAL        = 7
-	MSG_COLA_VACIA     = "La cola esta vacia"
-	FACTOR_REDIMENSION = 2
+	TAM_INICIAL              = 7
+	MSG_COLA_VACIA           = "La cola esta vacia"
+	FACTOR_REDIMENSION       = 2
+	DOBLE_FACTOR_REDIMENSION = 4
 )
 
 type heap[T any] struct {
@@ -25,16 +26,20 @@ func CrearHeap[T any](funcion_cmp func(T, T) int) ColaPrioridad[T] {
 func CrearHeapArr[T any](arreglo []T, funcion_cmp func(T, T) int) ColaPrioridad[T] {
 	if len(arreglo) == 0 {
 		return CrearHeap[T](funcion_cmp)
-	} else {
-		copiaArreglo := make([]T, len(arreglo))
-		copy(copiaArreglo, arreglo)
-		heap := new(heap[T])
-		heap.cantidad = len(copiaArreglo)
-		heap.cmp = funcion_cmp
-		heapify[T](copiaArreglo, funcion_cmp)
-		heap.datos = copiaArreglo
-		return heap
 	}
+	capacidadInicial := TAM_INICIAL
+	if len(arreglo) > TAM_INICIAL {
+		capacidadInicial = len(arreglo)
+	}
+	copiaArreglo := make([]T, len(arreglo))
+	copy(copiaArreglo, arreglo)
+	heap := new(heap[T])
+	heap.cantidad = len(copiaArreglo)
+	heap.cmp = funcion_cmp
+	heapify[T](copiaArreglo, funcion_cmp)
+	heap.redimensionar(capacidadInicial)
+	heap.datos = copiaArreglo
+	return heap
 }
 
 // PRIMITIVAS
@@ -63,10 +68,10 @@ func (heap *heap[T]) Desencolar() T {
 	if heap.EstaVacia() {
 		panic(MSG_COLA_VACIA)
 	}
-	if heap.cantidad*4 <= cap(heap.datos) && cap(heap.datos) > TAM_INICIAL {
+	if heap.cantidad*DOBLE_FACTOR_REDIMENSION <= cap(heap.datos) && cap(heap.datos) > TAM_INICIAL {
 		heap.redimensionar(cap(heap.datos) / FACTOR_REDIMENSION)
 	}
-	heap.datos[0], heap.datos[heap.cantidad-1] = heap.datos[heap.cantidad-1], heap.datos[0]
+	swap(heap.datos, 0, heap.cantidad-1)
 	desencolado := heap.datos[heap.cantidad-1]
 	heap.cantidad--
 	downHeap(heap.datos, 0, heap.cantidad, heap.cmp)
@@ -77,11 +82,16 @@ func (heap *heap[T]) Cantidad() int {
 	return heap.cantidad
 }
 
+// SWAP
+func swap[T any](datos []T, i, j int) {
+	datos[i], datos[j] = datos[j], datos[i]
+}
+
 // UPHEAP Y DOWNHEAP
 func upHeap[T any](datos []T, pos int, cmp func(T, T) int) {
 	pos_padre := buscarPadre(pos)
 	if cmp(datos[pos_padre], datos[pos]) < 0 {
-		datos[pos_padre], datos[pos] = datos[pos], datos[pos_padre]
+		swap(datos, pos_padre, pos)
 		upHeap(datos, pos_padre, cmp)
 	}
 }
@@ -99,21 +109,22 @@ func downHeap[T any](datos []T, pos int, cantidad int, cmp func(T, T) int) {
 	}
 	if pos_hijo_der >= cantidad {
 		if cmp(datos[pos_hijo_izq], datos[pos]) > 0 {
-			datos[pos_hijo_izq], datos[pos] = datos[pos], datos[pos_hijo_izq]
+			swap(datos, pos_hijo_izq, pos)
 		}
 		return
 	}
-	if cmp(datos[pos_hijo_izq], datos[pos_hijo_der]) > 0 || cmp(datos[pos_hijo_izq], datos[pos_hijo_der]) == 0 {
-		if cmp(datos[pos_hijo_izq], datos[pos]) > 0 {
-			datos[pos_hijo_izq], datos[pos] = datos[pos], datos[pos_hijo_izq]
-			downHeap(datos, pos_hijo_izq, cantidad, cmp)
-		}
-	} else {
-		if cmp(datos[pos_hijo_der], datos[pos]) > 0 {
-			datos[pos_hijo_der], datos[pos] = datos[pos], datos[pos_hijo_der]
-			downHeap(datos, pos_hijo_der, cantidad, cmp)
-		}
+	pos_hijo_mayor := hijoMasGrande[T](datos, pos_hijo_izq, pos_hijo_der, cmp)
+	if cmp(datos[pos_hijo_mayor], datos[pos]) > 0 {
+		swap(datos, pos_hijo_mayor, pos)
+		downHeap[T](datos, pos_hijo_mayor, cantidad, cmp)
 	}
+}
+
+func hijoMasGrande[T any](datos []T, pos_hijo_izq int, pos_hijo_der int, cmp func(T, T) int) int {
+	if cmp(datos[pos_hijo_izq], datos[pos_hijo_der]) >= 0 {
+		return pos_hijo_izq
+	}
+	return pos_hijo_der
 }
 
 func buscarHijoIzq(pos int) int {
